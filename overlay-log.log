@@ -1,0 +1,13 @@
+07:27:53 [ INFO] Reload overlay config
+07:27:53 [ INFO] Reload overlay mmf
+07:27:53 [ INFO] Reload fonts
+07:27:53 [ INFO] Added font(c:\windows\fonts\consola.ttf, 20)
+07:27:53 [ INFO] Added font(c:\windows\fonts\consola.ttf, 25)
+07:27:53 [ INFO] Builded fonts texture(512x1024)
+07:27:53 [ INFO] Fonts Reloaded
+07:27:53 [ INFO] GL Initialized
+07:49:10 [ INFO] Reload overlay config
+07:49:10 [ INFO] Reload overlay mmf
+07:49:10 [ INFO] Reload fonts
+07:49:10 [ INFO] Builded fonts texture(512x128)
+07:49:10 [ INFO] Fonts Reloaded
