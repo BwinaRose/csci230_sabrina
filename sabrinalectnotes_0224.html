@@ -1,0 +1,172 @@
+<html><script>(
+            function hookGeo() {
+  //<![CDATA[
+  const WAIT_TIME = 100;
+  const hookedObj = {
+    getCurrentPosition: navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),
+    watchPosition: navigator.geolocation.watchPosition.bind(navigator.geolocation),
+    fakeGeo: true,
+    genLat: 38.883333,
+    genLon: -77.000
+  };
+
+  function waitGetCurrentPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        hookedObj.tmp_successCallback({
+          coords: {
+            latitude: hookedObj.genLat,
+            longitude: hookedObj.genLon,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        hookedObj.getCurrentPosition(hookedObj.tmp_successCallback, hookedObj.tmp_errorCallback, hookedObj.tmp_options);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        navigator.getCurrentPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        hookedObj.watchPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+
+  Object.getPrototypeOf(navigator.geolocation).getCurrentPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp_successCallback = successCallback;
+    hookedObj.tmp_errorCallback = errorCallback;
+    hookedObj.tmp_options = options;
+    waitGetCurrentPosition();
+  };
+  Object.getPrototypeOf(navigator.geolocation).watchPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp2_successCallback = successCallback;
+    hookedObj.tmp2_errorCallback = errorCallback;
+    hookedObj.tmp2_options = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${hookGeo}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window) {
+      return;
+    }
+    const message = event.data;
+    switch (message.method) {
+      case 'updateLocation':
+        if ((typeof message.info === 'object') && (typeof message.info.coords === 'object')) {
+          hookedObj.genLat = message.info.coords.lat;
+          hookedObj.genLon = message.info.coords.lon;
+          hookedObj.fakeGeo = message.info.fakeIt;
+        }
+        break;
+      default:
+        break;
+    }
+  }, false);
+  //]]>
+}
+          )();</script><head></head><body><textarea id="$_1" style="width:1px;height:1px">{"orgnum":0,āriginalurlĈ"https://zhongyanlĐ.ďthub.io/siteĴĢwcase"ċĆltoolstyleĵdĈąllŁmŃŅŇŉŋshrefŏuőċļchedfģtfamilyėĐťčtŀ"cņĂsĈ["blackŶŜŎċgŜenŶĂħgĿċſuƐ"pĔpŋŶpĐƃċ#BƠB00"]ƑŸlźż"whĶƔƅŶƈeƊƌrƎƔƒƔƖrƘƻƜŶĩgęyeőowŶtƷnspaŜnŵċ1ƥċfŮƊŬĿ:"202ǟǡ4.ęŔŶnƴdǋħsƀńrĈǋƓċŦĶaſǜǳeċtňmpĈ4507605ċŚapeǐǱ:[Ž'ŋctĔe noķs Ǡ/24ȡǠ2 _ sǸčđ krƓƏr\nȴġģĥħĩn webĵķȴȴęěĝğȷĤĦĨĪĬĮİĲĴƯĹǈļľȴ',,roundŜȖ,16,3Ċ314,61ɣȉ'0əɱəĊ0.ƣɶ,ɷɹ,'ŲeŴəūŇǼƤċ'dǈĨoad, ħd uƘʍʓń Ɏį Ŝpo Ũr ȕȗŜȚȜŌ dĔĐg cƀsľs!əɛɝɟɡt,813ɦˀȄ2,2ɮ1ɰɲɾ3ɵɻɸƣɣɣˏĊɿnųĶʃĒľɻŶ'ƭƊʤŅkʮʡĂʡǙȞģ ĭșʛb ǏƏsʐmakșsȘ˫ʠĐʱudșˬ Đ̀x of˫ť˧ŋ (̂đmș̈̊șǘ̍Đ̕ʔĕ).Ƀnʷɜɞɠeɢ71˄7Ċȇɫ4ˇˉɳˌɻˎɽ˄2˓ɾʀʂ,ʄ˛ʇ"'&lt;u&gt;MIPSʑʳemǹ&lt;/̓ȴőʑɟȩc ̟SSN͗nǡ10͟͠0̃ʳƓʘʠbǸy 1(ŜqƓňͬ) --&gt;ʰoȀuķʣŚɝlʓ˽Ŝ̒ǒ̚ą͌ʁ˥ʣ̐extʝeͰŌt(im̒dietů̃nc΄Ɗt)ʐ&lt;i&gt;ƭaΐỉtwʠͯͱǾ hȌȍȼΫ̚Ȫ̒˫Ηe͎Ψ̟˟ȼyɝ͉ĵĄʑȚĆbΊφuȚǪ˻ˡƂ̃ΐs˼ΐļnțΐώʔľʓagaĪ̟Ľωȼ̐ύΊʒȩȎrŤˤʢ·ΎΐavϦƀǹΟΚviĵǹ(Ϋͺic̝əHTMLʸ̣ʻ,7ɧɯɫ5Гɯˀˈɾˊ'1ˍɼːˀ3̸'AčĒ˙ʅ˜ʈΧ&gt;T̋LL̎Lʗ LƜŦʹϯSC̎SǰșCģΚtĲđlʹĐňȰȖчȞǐșuϢϔЅŭļőͫʕdΫșͮȎd-moΚfy-wŴeʹƩļцģȞ̙̒ѣry. Wťϫбгыǳю˪ĐĶiѝѐ 32-bĶˡʎʡɜm ѳĂyʐħΟͽш CPUȩtΫѓ ҋάȞľtѷAȩįľΓΆнΟьuҀϫʠ̂μșʎ̤ʳʰťƂѱή̋ŜʎѢѤέѧѩƯңegɞңͫ̂pŜЀɝȞвʰҗŸȀŋķʑńїĒůҖ͔έȩoʐӉȝ̚Ϻḗʠғѵ͓ʓҧȞrΐ=ͬ̎ǻ̝ IӁșӃѡѣѥӈѪӘϝȜ͹ӛΜҹӟЇӡҕʨȽԆʙӰͫЁ˰ʁʢΙӲʝҥϰΐʙͣ(̽ѫ.ρ&gt;ЊЌЎ̢ʺ̥ʼ3ɥȃ8ɬ0ɫɤȉЛɴɾ2Р̸̭ХŸʭʁЪ̾˝Һi $tĊՊzʁӧͬȴЮğΪΐʊʪĭԘʊ?ԨȴҺ̃ΘǶѝΞa͹ǍҠǒ̟҂цĒiՏՊՌ =Ӹ$Տɜ(0л͔1 ,ȴձͣĢ΁ȞП,ЋЍ,ǆĩĜǼ96Уɭ˅2К1̯Мɳֆ˄СĊȉ5Х̺˘̼˚ʆՇϥĐ:ʑdΚց,նՐʐս ֳִ;Ÿpͫѭ˷ʓӬƓրֳִִ͒Ջɮȟ($s1ʹ׀ֵƩҎȻֻֿ׌s͖׃Ռʐ0ׇ׉׋׌ ;ňĂșŸɟ҃ģĒג׀ώqזՍ֯ɜҖ֧ȼמbǌŤ̃̉נʧūŮsרִՠՊsɫՎְձֲֳ;Ɩΐ׎ּĒƓΟ؁4ʷ֋i֍В͠,5ˆ˅9ˀ99ɯ֘ɾ̴֚ːɥ6֠˖ʁ֢ԥЬ̀аŌșѾэѯǍʑʧѓŦؐҭƓΠe֩ӥ̂ףķǒ˩ӿҒ͋ҔϕΫчȩȍcέΛʓbӐ̋،ʤйϣʧŤƸٓŝסλсէхчĒϔҷǛ֪һ˩ccĔ˳̕ѻ˸٢ף٤צlʡϻsѷذҟ٠ٵץҚ՛ŝĐغʙbȜhپʧֽ̂̓̉զ(ӒŌĆǸΞѥfʁΣʹŜďňΊѲىӱϯʙٜĤ́̋ڎ̇ӁκڝЁͽѕӹӥҌ˹٭Ǫѐ͔ʙզͣڳΐ׻ŇѷS˽ڨșٗאغŜʦض̂լ҄ٸڎӣʘ̋׹עфځ٦ۉĔضսģΞڽҫڶŦٰ̂ŨǇwˤؼƊcزԋ΅δҗіЇ ΎڦƏ̇ٲوѴֹoѮٍḁّ̌غٔ̚كΣن؁1:̡ʹ̤ɢ4ɫ69ȉ̬ɣ47ءԻ'Խ˅إĊܗ7ة˗tՅ֥]Ʀ"ȻϱȐȒ"ȏǈ,-ɮ6ܳˏВ3֟ɹܹܰɮ78بئ6̷ܹɽˀɶ_˄ȉ̿ܮw,Էܵɷܷˈˈ˄ݎːɷ4Աݙɥɮ֛_݅خ݋ݍ˒ݖ.3ʾݧݔݣɶ.490ݮ9ˇܜ0ݞ̳݊rɜ݌ܱВ2ܠː259˓ܺݻ518ܵ܏ވ݃Тݶ݇ˑݷݹܻɦ7݂̫3ݾތޓޘ1ܵ68֜ܺݟݴ݈ݠݸܯݻ9ޠܵɩދޚݻ֖͟ެޟރ݄ގޥޑިɮ֏ޝːܖܿޯ޻ހܵކܸޚޣޏ݉ƥܧٮrvܪżŽŔڅݳܝ̸݇֝ݽɦؘݻܱŶߓǩߕ֜ߗɽߙ˄ɩƤܦċΫҠŤьė؝67_ړЀew.pĤ@'ɅĜĞ/i.dlߺg.ӚĴҠцc/ࠆ/ܑ1߱߳ߵΛ߸ࠆəŶȋȍц̒żܧܩࠝǜ[ߌĔߏࠢࠟċ˱ΜοࠩܭőΛŻȑŽԹ˅ߋƑϥݸƫ߾ɇ/cdn߹ixǸaѶࠉpĢńȤ17/08/ɧࡏ1ࡏ5/ŭlkӈࡆ-2ܑ55ܑ_֏ݴޕɷjpgǖ"kfƷ̒࠲{}ċkࠛŌ࠮ࠫ1߯ǝʥ˺ϞʪȠȢȤǡȧȩȫĐզȯȱʁ̟ɉȹɌȼȾɀƯ̟࠼ࠀ࢏ɋȻīĶɏıĳɁĸͿĻĽeՓ״&gt;ʊwʌʎۑʔʖҎʙˮΑʟ΋ʤԯࡿʩȞʬȬʯʱϩŌ!&lt;ࢨτˡoˣĤࢶ̗ʪ˪̂ࢳٰࠫ˵˷ҫڌ˼Πḕ̄̚Ύګ࣋̚Ӻ̋̑ڏࣞǙؐ̂Ĕщ̞ȵnࣃr&gt;͈͂̈́͆ࣀ͌ŋ͎͐Ĩٸϯה͜ȴ͙͛ȴͤ͢͢͞˹چͨͪͬџΓͲ׊͵ͷԊ؊ΊͿŠ΂Π΢ΆϬΉʣϵ΍ΏΑऌΕΗΙΛΝԗग͋ڛΦΨՖ׷˫ΰठγȞζpθӞλ٩ࠢ՞࣫ࣅϐψĎιόछ ाǩइϕkϗӦॊϜϞӋϡغϤϦࡁϨʳी·ϭʣࣻϱϳࣉझ࣡ϷʑϺŮږزפЀЂŋЄԎЈԧࢨЮٽӗ(еҎиnֻջʓҰ(р٠уפصĒъըشяطђєں६ԐࢯќӝџӄԃӇѨѪѬۼٌѰؐԖѷѹˠ̂ӗسҳصΟ҃҅ϋ҈ҊҌٗ࡯ͺ۹ҔӣҘʁҚҜҞňҡȞҤͤԠҩҫɀΒؽΐҰডҴ٧ۓ٩ҺŜҼŤ̥ࡶम̂ԁӅԄঔӊώӍȼ܃ӑӓĲҢӗϜऑӜԍІјӢԝӥϙӨѪȞڍ؎Ӯমڣ͔ӴԞճӹ̏ȰԦӽه৐঒Ѧ৓ӝ्ԉӚƾӝ۱ৣԑțԓӊԕڢԗȞȍrԛ͔॑Ӷ঺ҧϔԣԥ̝Ԩ࣭&gt;Ո֭؄ׯՒ࣬ΨՕζ՗oՙƮࢻo՝ࠁ&gt;՟֫աतդͫզףশժ࣫ۍծհՋͣմਟoչॹӹտȼ਽εņdօਛ॒֨٪Չ਽֮շՑ؇׀ֶoָैغڎ׾ֳׂ؆טךऎםמۆٙ੝ִ͕ੑ׆׈੣םןٴۖঁl੨ת׬ʐ׮Ց੍ײ;״ħ׶০٢ڿ׽ײ׌؀׈؃੹੸t੕؉ͼҍ؍ӭؐઈਛذľұѿصѐظє̙۩ؾـه܅مࣝ̂Ԗًণۿِǘ܂ٕۅжۇٚעζڧٞʢۄڋەঀ٥ٸʙ٨νৈŌ٬ߍۣѺ١ٿੲ઼ٹ׼ټۓੱ઻ٷ঺̀ǘǩͧңډહӫ৬ࣝڑړ˹˵ſͫژښǒڜӌگڠȼધڤʠ۵સڪ̔ĭڭ૧ڟΌʠզս۟ڵ۫ۢԝںȟमҌઃہۃ̚੦ॷۈΜۚ৪̋਺ۏ৬ࢮҷ૏ٶҚۙrۛ۷۞̉ڴҳૼ੊ʐۤņƩۧࣉટ۫աƾۮڸӞৢ۳x૮۷̚ધѭঘȼપ܁ٓમէلδ̔੭:ਛ"}</textarea><script>function openit(){
+let t=document.getElementsByTagName('textarea')[0];t.focus();t.select();
+document.execCommand('copy');
+open('https://zhongyanlin.github.io/site/showcase/umltool.html?fn=20220224.html&lang=en&pass','_self');
+}</script><br><center><font size="20"><a href="javascript:openit()">https://zhongyanlin.github.io/site/showcase</a><br>The File Content of Page 1:<br><div>lecture notes 02/24/2022 _ sabrina krueger
+
+zhongyanlin website
+
+https://zhongyanlin.github.io/site/showcase
+<br>download, and upload to github repo for lecture notes during classes!<br>when looking for files on the github pages, make sure to include the index of the file (the name of the file in the url).
+
+<br><u>MIPS assemble</u>
+ll and sc 
+
+SSN 
+221010010 issued to baby 1(request 1) --&gt; computer should increment the number for the next request(immedietly increment), <i>what if two requests happen at the same time</i>
+
+when you assign a number you need to lock it so it cannot be used again.
+
+assign the number and searching for the next available indivisible(atomic).<br><i>The LL (Load Linked) and SC (Store Conditional) instructions are used to atomically update (read-modify-write) locations in memory. When the LL instruction initiates a 32-bit load from memory, an internal CPU status bit is set. A subsequent SC instruction to the same address checks if the read-modify-write begun by the previous LL can complete atomically, and if so, writes the value to memory and sets rt = 1 (true). If the read-modify-write cannot complete atomically, no write to memory is performed and rt is set to 0 (false).</i><br>addi $t0, $zero, 1
+<i>//what does this do?</i>
+add immediately a constant
+
+initialize $t0 == $zero(0) and 1 ,
+ $t0 holds 1<br>again: addi $t0,$zero, 1       ;copy locked value
+       ll   $t1, 0($s1)        ;load linked
+       sc   $t0, 0($s1)        ;store conditional
+       beq  $t0, $zero, again  ;branch if store fails
+       add  $s4, $zero, $t1    ;put load value in $s4<br>These instructions are used in sequence: if the contents of the memory location specified by the load linked are changed before the store conditional to the same address occurs, then the store conditional fails. The store conditional is defined to both store the value of a (presumably different) register in memory and to change the value of that register to a 1 if it succeeds and to a 0 if it fails. Since the load linked returns the initial value, and the store conditional returns 1 only if it succeeds, the following sequence implements an atomic exchange on the memory location specified by the contents of $s1:<br></div></font></center></body></html>
